@@ -1,5 +1,5 @@
 
-// http://devwiki.electricimp.com/doku.php?id=templog
+// orginal from http://devwiki.electricimp.com/doku.php?id=templog
 // Temperature logging example for Hannah
  
 // Temperature Sensor Class for SA56004X
