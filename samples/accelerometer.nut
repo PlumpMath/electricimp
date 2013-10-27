@@ -1,5 +1,7 @@
-// modified from http://forums.electricimp.com/discussion/209/hannah-accelerometer-interrupts/p1
-// Color Blink code example for Hannah
+
+// Sample accelerometer readings 
+
+// orginated from https://gist.github.com/gbsallery/3772907
  
 // IO Expander Class for SX1509
 class IoExpander
@@ -110,99 +112,47 @@ class IoExpander
     }
 }
  
-// RGB LED Class
-class RgbLed extends IoExpander
+ // Accelerometer Class
+class Accelerometer extends IoExpander // clearly, this is not really an IOExpander, we're just nicking it's read() function
 {
-    // IO Pin assignments
-    pinR = null;
-    pinG = null;
-    pinB = null;
- 
-    constructor(port, address, r, g, b)
+    constructor(port, address)
     {
         base.constructor(port, address);
- 
-        // Save pin assignments
-        pinR = r;
-        pinG = g;
-        pinB = b;
- 
-        // Disable pin input buffers
-        writeBit(pinR>7?0x00:0x01, pinR>7?(pinR-7):pinR, 1);
-        writeBit(pinG>7?0x00:0x01, pinG>7?(pinG-7):pinG, 1);
-        writeBit(pinB>7?0x00:0x01, pinB>7?(pinB-7):pinB, 1);
- 
-        // Set pins as outputs
-        writeBit(pinR>7?0x0E:0x0F, pinR>7?(pinR-7):pinR, 0);
-        writeBit(pinG>7?0x0E:0x0F, pinG>7?(pinG-7):pinG, 0);
-        writeBit(pinB>7?0x0E:0x0F, pinB>7?(pinB-7):pinB, 0);
- 
-        // Set pins open drain
-        writeBit(pinR>7?0x0A:0x0B, pinR>7?(pinR-7):pinR, 1);
-        writeBit(pinG>7?0x0A:0x0B, pinG>7?(pinG-7):pinG, 1);
-        writeBit(pinB>7?0x0A:0x0B, pinB>7?(pinB-7):pinB, 1);
- 
-        // Enable LED drive
-        writeBit(pinR>7?0x20:0x21, pinR>7?(pinR-7):pinR, 1);
-        writeBit(pinG>7?0x20:0x21, pinG>7?(pinG-7):pinG, 1);
-        writeBit(pinB>7?0x20:0x21, pinB>7?(pinB-7):pinB, 1);
- 
-        // Set to use internal 2MHz clock, linear fading
-        write(0x1e, 0x50);
-        write(0x1f, 0x10);
- 
-        // Initialise as inactive
-        setLevels(0, 0, 0);
-        setPin(pinR, 0);
-        setPin(pinG, 0);
-        setPin(pinB, 0);
+        
+        write(0x20, 0x47); // Bring device out of power-down,
+    
+        setDir(3, 0);
+        setPullUp(3, true);        
+        
     }
  
-    // Set LED enabled state
-    function setLed(r, g, b)
-    {
-        if(r != null) writeBit(pinR>7?0x20:0x21, pinR&7, r);
-        if(g != null) writeBit(pinG>7?0x20:0x21, pinG&7, g);
-        if(b != null) writeBit(pinB>7?0x20:0x21, pinB&7, b);
+    function getZ() {
+        return read(0x2d);
     }
- 
-    // Set red, green and blue intensity levels
-    function setLevels(r, g, b)
-    {
-        if(r != null) write(pinR<4?0x2A+pinR*3:0x36+(pinR-4)*5, r);
-        if(g != null) write(pinG<4?0x2A+pinG*3:0x36+(pinG-4)*5, g);
-        if(b != null) write(pinB<4?0x2A+pinB*3:0x36+(pinB-4)*5, b);
+    function getY() {
+        return read(0x2b);
+    }
+    function getX() {
+        return read(0x29);
     }
 }
+
  
- 
-// Construct an LED
-local led = RgbLed(I2C_89, 0x3E, 7, 5, 6);
+local accelerometer = Accelerometer(I2C_89, 0x1c);
  
 // Main loop
 function update()
 {
     // Schedule the next change
     imp.wakeup(1.0, update);
- 
-    local r = 99;
 
-    // Set the LED color
-    // off = led.setLevels(1,1,1);
-    if(counter == 1) led.setLevels(r, 0, 0);
-    if(counter == 2) led.setLevels(0, r, 0);
-    if(counter == 3) {
-      led.setLevels(0, 0, r);
-      counter = 0
-    }
-    counter++; 
+    server.log(accelerometer.getX() + "," + accelerometer.getY() + "," + accelerometer.getZ());
+
 }
  
 // Register with the server
-imp.configure("RGB LED blinking", [], []);
- 
-// Enable the LED outputs and start color changing
-//led.setLed(1, 1, 1);
+imp.configure("Accelerometer Sample", [], []);
+
 update();
  
 // End of code.
