@@ -188,7 +188,7 @@ function update()
     local r = 99;
 
     // Set the LED color
-    // off = led.setLevels(0,0,0);
+    // off = led.setLevels(1,1,1);
     if(counter == 1) led.setLevels(r, 0, 0);
     if(counter == 2) led.setLevels(0, r, 0);
     if(counter == 3) {
